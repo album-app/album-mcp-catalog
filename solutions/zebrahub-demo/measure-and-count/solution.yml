@@ -1,0 +1,41 @@
+album_api_version: 0.7.1
+args:
+- description: Input 3D uint16 TIFF.
+  name: image_path
+  required: true
+  type: string
+- description: Input 3D integer labels TIFF.
+  name: labels_path
+  required: true
+  type: string
+- description: Source metadata JSON.
+  name: source_path
+  required: true
+  type: string
+- description: Separately supplied t=425 track CSV extract.
+  name: reference_path
+  required: true
+  type: string
+- description: Expected SHA-256 of reference CSV.
+  name: expected_reference_sha256
+  required: true
+  type: string
+- description: Output directory for CSV, overlay, and validation report.
+  name: output_dir
+  required: true
+  type: string
+changelog: null
+description: Study-authored CPU demonstration solution. Saves object measurements,
+  a projected label overlay, and count validation.
+group: zebrahub-demo
+name: measure-and-count
+solution_creators:
+- Album manuscript demonstration team
+tags:
+- demonstration
+- measurements
+- validation
+- microscopy
+timestamp: '2026-09-26T15:20:51.486674'
+title: Measure nuclei and compare count with published tracks
+version: 0.1.0
