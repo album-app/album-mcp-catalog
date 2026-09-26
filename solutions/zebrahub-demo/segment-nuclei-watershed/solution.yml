@@ -1,0 +1,57 @@
+album_api_version: 0.7.1
+args:
+- description: Input 3D uint16 TIFF.
+  name: image_path
+  required: true
+  type: string
+- description: Source metadata JSON with voxel spacing.
+  name: source_path
+  required: true
+  type: string
+- description: Output 3D uint32 labels TIFF.
+  name: labels_path
+  required: true
+  type: string
+- description: Gaussian sigma along Z, voxels.
+  name: sigma_z
+  required: true
+  type: float
+- description: Gaussian sigma along Y, voxels.
+  name: sigma_y
+  required: true
+  type: float
+- description: Gaussian sigma along X, voxels.
+  name: sigma_x
+  required: true
+  type: float
+- description: Intensity threshold after smoothing.
+  name: threshold
+  required: true
+  type: float
+- description: Minimum separation of local maxima, voxels.
+  name: min_distance
+  required: true
+  type: integer
+- description: Minimum distance-transform peak height, micrometers.
+  name: peak_threshold_um
+  required: true
+  type: float
+- description: Minimum object size, voxels.
+  name: min_size
+  required: true
+  type: integer
+changelog: null
+description: Study-authored CPU demonstration solution. Gaussian threshold and watershed;
+  no training or access to reference tracks.
+group: zebrahub-demo
+name: segment-nuclei-watershed
+solution_creators:
+- Album manuscript demonstration team
+tags:
+- demonstration
+- segmentation
+- nuclei
+- cpu
+timestamp: '2026-09-26T15:20:47.235197'
+title: Segment nuclei in a 3D ZebraHub image on CPU
+version: 0.1.0
