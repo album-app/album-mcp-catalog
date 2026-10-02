@@ -1,0 +1,53 @@
+album_api_version: 0.7.1
+args:
+- description: Public HTTPS OME-Zarr root URI.
+  name: zarr_uri
+  required: true
+  type: string
+- description: Multiscale array level.
+  name: level
+  required: true
+  type: integer
+- description: Timepoint index.
+  name: timepoint
+  required: true
+  type: integer
+- description: Channel index.
+  name: channel
+  required: true
+  type: integer
+- description: Z chunk index.
+  name: chunk_z
+  required: true
+  type: integer
+- description: Y chunk index.
+  name: chunk_y
+  required: true
+  type: integer
+- description: X chunk index.
+  name: chunk_x
+  required: true
+  type: integer
+- description: Expected SHA-256 of the compressed remote chunk.
+  name: expected_sha256
+  required: true
+  type: string
+- description: Directory for image.tif and source.json.
+  name: output_dir
+  required: true
+  type: string
+changelog: null
+description: Study-authored CPU demonstration solution. Retrieves one 3D ZebraHub
+  OME-Zarr chunk and saves TIFF plus source metadata.
+group: zebrahub-demo
+name: retrieve-zarr-chunk
+solution_creators:
+- Album manuscript demonstration team
+tags:
+- demonstration
+- remote-data
+- ome-zarr
+- microscopy
+timestamp: '2026-09-26T15:20:42.765860'
+title: Retrieve a checksum-pinned remote OME-Zarr chunk
+version: 0.1.0
