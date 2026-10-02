@@ -2,6 +2,11 @@
 
 from album.runner.api import setup
 
+TRACKS_URI = ("https://public.czbiohub.org/royerlab/zebrahub/imaging/single-objective/"
+              "ZSNS001_tail_tracks.csv")
+TRACKS_SHA256 = "8a30b8c9133941eb28863b0f0a3784743a5d52f558636febcdd6a3a25480a660"
+TRACKS_FILE = "ZSNS001_tail_tracks.csv"
+
 
 ENV = """
 channels:
@@ -18,6 +23,37 @@ dependencies:
 """
 
 
+def install():
+    import hashlib
+    import shutil
+    from urllib.request import urlopen
+
+    from album.runner.api import get_app_path
+
+    target = get_app_path() / TRACKS_FILE
+    target.parent.mkdir(parents=True, exist_ok=True)
+    partial = target.with_suffix(".part")
+    digest = hashlib.sha256()
+    with urlopen(TRACKS_URI, timeout=120) as response, partial.open("wb") as file:
+        while block := response.read(1 << 20):
+            digest.update(block)
+            file.write(block)
+    assert digest.hexdigest() == TRACKS_SHA256, "published track table checksum mismatch"
+    shutil.move(partial, target)
+    print(f"Published track table saved to {target}")
+
+
+def extract_timepoint(table, t, destination):
+    """Copy the header and every row with the given t verbatim from the published table."""
+    with table.open("rb") as source, destination.open("wb") as out:
+        header = source.readline()
+        out.write(header)
+        column = header.decode().strip().split(",").index("t")
+        for line in source:
+            if float(line.split(b",", column + 1)[column]) == t:
+                out.write(line)
+
+
 def run():
     import csv
     import hashlib
@@ -26,14 +62,14 @@ def run():
 
     import numpy as np
     import tifffile
-    from album.runner.api import get_args
+    from album.runner.api import get_app_path, get_args
     from PIL import Image
     from scipy import ndimage as ndi
     from skimage.segmentation import find_boundaries
 
     args = get_args()
-    image_path, labels_path, source_path, reference_path = map(
-        Path, (args.image_path, args.labels_path, args.source_path, args.reference_path)
+    image_path, labels_path, source_path = map(
+        Path, (args.image_path, args.labels_path, args.source_path)
     )
     out = Path(args.output_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -45,8 +81,14 @@ def run():
     assert labels.min() == 0 and labels.max() > 0
     assert hashlib.sha256(image.tobytes()).hexdigest() == source["decoded_image_sha256"]
     assert hashlib.sha256((source_path.parent / "source_chunk.bin").read_bytes()).hexdigest() == source["source_chunk_sha256"]
+    if args.reference_path:
+        reference_path = Path(args.reference_path)
+    else:
+        reference_path = out / f"tracks_t{int(source['t'])}.csv"
+        extract_timepoint(get_app_path() / TRACKS_FILE, float(source["t"]), reference_path)
     reference_hash = hashlib.sha256(reference_path.read_bytes()).hexdigest()
-    assert reference_hash == args.expected_reference_sha256.lower(), "reference CSV checksum mismatch"
+    if args.expected_reference_sha256:
+        assert reference_hash == args.expected_reference_sha256.lower(), "reference CSV checksum mismatch"
     spacing = np.array(source["spacing_um_zyx"], dtype=float)
     start = np.array(source["chunk_start_zyx"], dtype=float)
     assert spacing.shape == start.shape == (3,) and np.all(spacing > 0)
@@ -89,6 +131,8 @@ def run():
         "passed": True, "image_shape": image.shape, "image_dtype": str(image.dtype),
         "label_dtype": str(labels.dtype), "objects": len(ids), "csv_rows": len(ids),
         "reference_t": source["t"], "reference_rows": len(tracks),
+        "reference_path": str(reference_path),
+        "reference_source": args.reference_path or TRACKS_URI,
         "reference_in_chunk": reference_count, "reference_sha256": reference_hash,
         "count_difference": difference,
         "relative_count_difference": difference / reference_count,
@@ -102,18 +146,21 @@ def run():
 
 
 setup(
-    group="zebrahub-demo", name="measure-and-count", version="0.1.0",
-    album_api_version="0.7.1", run=run,
+    group="zebrahub-demo", name="measure-and-count", version="0.2.0",
+    album_api_version="0.7.1", install=install, run=run,
     title="Measure nuclei and compare count with published tracks",
-    description="Study-authored CPU demonstration solution. Saves object measurements, a projected label overlay, and count validation.",
+    description=("Study-authored CPU demonstration solution. Saves object measurements, a projected "
+                 "label overlay, and count validation. Installation downloads the published ZebraHub "
+                 "ZSNS001 tail track table (487 MB) once and verifies its SHA-256; each run extracts "
+                 "the rows for the image's time point."),
     solution_creators=["Album manuscript demonstration team"],
     tags=["demonstration", "measurements", "validation", "microscopy"],
     args=[
         {"name": "image_path", "type": "string", "required": True, "description": "Input 3D uint16 TIFF."},
         {"name": "labels_path", "type": "string", "required": True, "description": "Input 3D integer labels TIFF."},
         {"name": "source_path", "type": "string", "required": True, "description": "Source metadata JSON."},
-        {"name": "reference_path", "type": "string", "required": True, "description": "Separately supplied t=425 track CSV extract."},
-        {"name": "expected_reference_sha256", "type": "string", "required": True, "description": "Expected SHA-256 of reference CSV."},
+        {"name": "reference_path", "type": "string", "required": False, "description": "Optional track CSV for this time point. If omitted, rows for the image's time point are extracted from the published table downloaded at install and saved in output_dir."},
+        {"name": "expected_reference_sha256", "type": "string", "required": False, "description": "Optional expected SHA-256 of the track CSV for this time point (for t=425: a13d9b7ba18fa2e8a98ce499227f7c6fec353ccb9ea13f8a2e03ce184852c994)."},
         {"name": "output_dir", "type": "string", "required": True, "description": "Output directory for CSV, overlay, and validation report."},
     ],
     dependencies={"environment_file": ENV},

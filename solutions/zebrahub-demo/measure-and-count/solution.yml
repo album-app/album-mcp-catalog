@@ -12,21 +12,28 @@ args:
   name: source_path
   required: true
   type: string
-- description: Separately supplied t=425 track CSV extract.
+- description: Optional track CSV for this time point. If omitted, rows for the image's
+    time point are extracted from the published table downloaded at install and saved
+    in output_dir.
   name: reference_path
-  required: true
+  required: false
   type: string
-- description: Expected SHA-256 of reference CSV.
+- description: 'Optional expected SHA-256 of the track CSV for this time point (for
+    t=425: a13d9b7ba18fa2e8a98ce499227f7c6fec353ccb9ea13f8a2e03ce184852c994).'
   name: expected_reference_sha256
-  required: true
+  required: false
   type: string
 - description: Output directory for CSV, overlay, and validation report.
   name: output_dir
   required: true
   type: string
-changelog: null
+changelog: Download the published ZebraHub track table at install and extract the
+  image's time point at run time; reference_path and expected_reference_sha256 are
+  now optional.
 description: Study-authored CPU demonstration solution. Saves object measurements,
-  a projected label overlay, and count validation.
+  a projected label overlay, and count validation. Installation downloads the published
+  ZebraHub ZSNS001 tail track table (487 MB) once and verifies its SHA-256; each run
+  extracts the rows for the image's time point.
 group: zebrahub-demo
 name: measure-and-count
 solution_creators:
@@ -36,6 +43,6 @@ tags:
 - measurements
 - validation
 - microscopy
-timestamp: '2026-09-26T15:20:51.486674'
+timestamp: '2026-10-02T11:33:41.782509'
 title: Measure nuclei and compare count with published tracks
-version: 0.1.0
+version: 0.2.0
