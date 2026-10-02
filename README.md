@@ -20,8 +20,17 @@ From an MCP client, call `album_add_catalog` with the same URL.
 
 ## Claude Code
 
-Set up the Album MCP server as described in the [album-mcp README](https://gitlab.com/album-app/album-mcp#using-with-claude-code). Then ask, for example:
+Set up the Album MCP server as described in the [album-mcp README](https://gitlab.com/album-app/album-mcp#using-with-claude-code). Then start Claude Code and give it this prompt, replacing `<output directory>` with an absolute path:
 
-> Add the Album catalog at https://github.com/album-app/album-mcp-catalog.git, inspect its solutions and their arguments, then retrieve ZebraHub `ZSNS001_tail.ome.zarr` at level 0, time point 425, channel 0, chunk (z,y,x) = (1,1,1), segment the nuclei, and measure them against the published tracks. Save the outputs in `<directory>`.
+```text
+Use the Album tools. Add the Album catalog at https://github.com/album-app/album-mcp-catalog.git if it is not already registered, then inspect the available solutions and their arguments before running anything.
 
-With the parameters used in the paper (sigma_z=0.8, sigma_y=1.3, sigma_x=1.3, threshold=40, min_distance=4, peak_threshold_um=1.5, min_size=40), the run yields 1,240 objects and 1,623 track positions in the chunk.
+Analyze one public ZebraHub image volume:
+1. Retrieve ZSNS001_tail.ome.zarr from https://public.czbiohub.org/royerlab/zebrahub/imaging/single-objective/ZSNS001_tail.ome.zarr/ at resolution level 0, time point 425, channel 0, chunk (z,y,x) = (1,1,1). The compressed chunk must have SHA-256 0030b18d5f382045612e397c2e41059b5c3b229583ee5f97aec691b4ca6bbb76.
+2. Segment nuclei on the CPU with sigma_z=0.8, sigma_y=1.3, sigma_x=1.3, threshold=40, min_distance=4, peak_threshold_um=1.5, min_size=40.
+3. Measure the segmented objects and compare their count with the published ZebraHub track positions for the same time point.
+
+Save all outputs in <output directory>. When finished, report the solution versions you used, the exact arguments of each run, the output files, the number of segmented objects and track positions, and any calls that failed.
+```
+
+The expected result is 1,240 segmented objects and 1,623 track positions in the chunk. The first run installs three solution environments and downloads the 487 MB track table, so it takes a few minutes.
